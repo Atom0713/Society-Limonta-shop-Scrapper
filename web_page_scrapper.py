@@ -1,11 +1,7 @@
 # access names and subsections of the products, save those to db, and their urls, send it to scrap_items_meta to get each items metadata
-
-import lxml as lxml
-import pandas as pd
 from urllib import urlopen
 from bs4 import BeautifulSoup
-
-
+from scrap_metadata import ScrapMetadata as Sm
 
 class Scrapper:
 
@@ -23,26 +19,48 @@ class Scrapper:
         title = soup.title.string
         print(title)
 
-        # TODO create List to hold all products wit hthe list of their sub products
+        shopping_list = []
         # get to the shop menu
         div_tags = soup.find_all("div", {"class": "MegaMenu__Item MegaMenu__Item--fit"})
         for div_tag in div_tags:
             # get each products name
-            a_tag = div_tag.find("a", {"class":"MegaMenu__Title"})
+            room_link = div_tag.find("a", {"class":"MegaMenu__Title"})
+            room_name = room_link.text.strip()
             # get each products sub list of products
             items_list = div_tag.find("ul", {"class": "Linklist"})
-            print ("Room: " + a_tag.text)
 
-            # TODO create dictionary to save all items of the product dict = {a_tag.text: []}
+            room_products_list = []
             for li_tag in items_list:
                 # get name of each sub product
-                print("accessory: " + li_tag.text)
-                print (li_tag.find("a").get("href") + "\n")
-                # TODO save name of the product with its sub product names to the dictionary dict = {a_tag: [li_tag.text]}
+                room_product_name = li_tag.text.strip()
 
-                # TODO get url of each sub product and call scrap_items_meta to get information about all items in a sub product
+                link = self.url + li_tag.find("a").get("href").strip()
 
+                # returns a list of products, where each item in the list is a dictionary,
+                # that contains a single product metadata.
+                items_list = Sm().scrap_items(link)
+                # associate a list of items with a product name
+                if room_product_name != "View all":
+                    room_product_items_dict = {room_product_name: items_list}
+                    #add a product that contains a list of items to the list of products
+                    room_products_list.append(room_product_items_dict)
+            # add
+            rooms_dict = {room_name: room_products_list}
+            shopping_list.append(rooms_dict)
 
+        for y in shopping_list:
+            for x in y:
+                print ("\nRoom: " + x)
+                for z in y[x]:
+                    for a in z:
+                        print ("accessory: " + a)
+                        for b in z[a]:
+                            for c in b:
+                                value = b[c]
+                                print ("items meta: " + c + "->" + str(value))
+                            print "\n"
+
+        return shopping_list
 
 
 

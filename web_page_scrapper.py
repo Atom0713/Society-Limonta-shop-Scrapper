@@ -2,6 +2,7 @@
 from urllib import urlopen
 from bs4 import BeautifulSoup
 from scrap_metadata import ScrapMetadata as Sm
+import lxml
 
 class Scrapper:
 
@@ -12,14 +13,15 @@ class Scrapper:
     def get_html(self):
         #get html of the page
         html = urlopen(self.url)
+
         #create BeautifulSoup object
         soup = BeautifulSoup(html, 'lxml')
-        type(soup)
+        #type(soup)
         #shop name
-        title = soup.title.string
-        print(title)
+        website_name = soup.title.string
+        print(website_name)
 
-        shopping_list = []
+        shop_list = []
         # get to the shop menu
         div_tags = soup.find_all("div", {"class": "MegaMenu__Item MegaMenu__Item--fit"})
         for div_tag in div_tags:
@@ -39,6 +41,7 @@ class Scrapper:
                 # returns a list of products, where each item in the list is a dictionary,
                 # that contains a single product metadata.
                 items_list = Sm().scrap_items(link)
+
                 # associate a list of items with a product name
                 if room_product_name != "View all":
                     room_product_items_dict = {room_product_name: items_list}
@@ -46,21 +49,9 @@ class Scrapper:
                     room_products_list.append(room_product_items_dict)
             # add
             rooms_dict = {room_name: room_products_list}
-            shopping_list.append(rooms_dict)
+            shop_list.append(rooms_dict)
 
-        for y in shopping_list:
-            for x in y:
-                print ("\nRoom: " + x)
-                for z in y[x]:
-                    for a in z:
-                        print ("accessory: " + a)
-                        for b in z[a]:
-                            for c in b:
-                                value = b[c]
-                                print ("items meta: " + c + "->" + str(value))
-                            print "\n"
-
-        return shopping_list
+        return shop_list
 
 
 
